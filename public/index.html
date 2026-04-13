@@ -253,6 +253,10 @@
     document.getElementById('error-text').textContent = msg;
     document.getElementById('banner-error').style.display = 'flex';
   }
+  // Clean URL params so banners don't persist on refresh
+  if (params.toString()) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
 </script>
 
 </body>
