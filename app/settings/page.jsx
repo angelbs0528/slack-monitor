@@ -12,22 +12,48 @@ function SlackIcon() {
   );
 }
 
-function ModeOption({ mode, label, description, selected, onSelect }) {
+function ModeOption({ mode, label, description, selected, onSelect, children }) {
   return (
-    <label
-      className={`${styles.modeOption} ${selected ? styles.active : ''}`}
-      onClick={() => onSelect(mode)}
-    >
-      <div className={styles.radio}>
-        {selected && <div className={styles.radioDot} />}
-      </div>
-      <div>
-        <div className={styles.modeLabel}>{label}</div>
-        <div className={styles.modeDesc}>{description}</div>
-      </div>
-    </label>
+    <div>
+      <label
+        className={`${styles.modeOption} ${selected ? styles.active : ''}`}
+        onClick={() => onSelect(mode)}
+      >
+        <div className={styles.radio}>
+          {selected && <div className={styles.radioDot} />}
+        </div>
+        <div>
+          <div className={styles.modeLabel}>{label}</div>
+          <div className={styles.modeDesc}>{description}</div>
+        </div>
+      </label>
+      {selected && children}
+    </div>
   );
 }
+
+const TIMEZONE_OPTIONS = [
+  { label: 'Pacific Time (PT)', offset: -8 },
+  { label: 'Mountain Time (MT)', offset: -7 },
+  { label: 'Central Time (CT)', offset: -6 },
+  { label: 'Eastern Time (ET)', offset: -5 },
+  { label: 'Atlantic Time (AT)', offset: -4 },
+  { label: 'UTC', offset: 0 },
+  { label: 'London (GMT/BST)', offset: 0 },
+  { label: 'Central Europe (CET)', offset: 1 },
+  { label: 'Eastern Europe (EET)', offset: 2 },
+  { label: 'India (IST)', offset: 5.5 },
+  { label: 'Singapore (SGT)', offset: 8 },
+  { label: 'Japan (JST)', offset: 9 },
+  { label: 'Australia Eastern (AEST)', offset: 10 },
+  { label: 'New Zealand (NZST)', offset: 12 },
+];
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
+  const ampm = i < 12 ? 'AM' : 'PM';
+  const hour = i === 0 ? 12 : i > 12 ? i - 12 : i;
+  return { value: i, label: `${hour}:00 ${ampm}` };
+});
 
 export default function Settings() {
   return (
@@ -43,7 +69,9 @@ function SettingsContent() {
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState('');
   const [selectedMode, setSelectedMode] = useState(null);
-  const [originalMode, setOriginalMode] = useState(null);
+  const [digestHour, setDigestHour] = useState(9);
+  const [timezone, setTimezone] = useState('UTC');
+  const [original, setOriginal] = useState(null);
   const [status, setStatus] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -62,10 +90,18 @@ function SettingsContent() {
         .then(r => r.json())
         .then(data => {
           setSelectedMode(data.mode);
-          setOriginalMode(data.mode);
+          setDigestHour(data.digestHour ?? 9);
+          setTimezone(data.timezone ?? 'UTC');
+          setOriginal({ mode: data.mode, digestHour: data.digestHour ?? 9, timezone: data.timezone ?? 'UTC' });
         });
     }
   }, [searchParams]);
+
+  const hasChanges = original && (
+    selectedMode !== original.mode ||
+    digestHour !== original.digestHour ||
+    timezone !== original.timezone
+  );
 
   const handleSave = async () => {
     setSaving(true);
@@ -74,11 +110,11 @@ function SettingsContent() {
       const res = await fetch(`/api/settings?team=${teamId}&user=${userId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team: teamId, user: userId, mode: selectedMode }),
+        body: JSON.stringify({ team: teamId, user: userId, mode: selectedMode, digestHour, timezone }),
       });
       const data = await res.json();
       if (data.ok) {
-        setOriginalMode(selectedMode);
+        setOriginal({ mode: selectedMode, digestHour, timezone });
         setStatus({ type: 'success', message: 'Preference saved!' });
       } else {
         throw new Error(data.error);
@@ -125,15 +161,42 @@ function SettingsContent() {
           <ModeOption
             mode="daily"
             label="Daily digest"
-            description="Receive a summary of all your mentions at 9:00 AM UTC each day."
+            description="Receive a summary of all your mentions once a day."
             selected={selectedMode === 'daily'}
             onSelect={(m) => { setSelectedMode(m); setStatus(null); }}
-          />
+          >
+            <div className={styles.digestConfig}>
+              <div className={styles.digestRow}>
+                <label className={styles.digestLabel}>Delivery time</label>
+                <select
+                  className={styles.select}
+                  value={digestHour}
+                  onChange={(e) => { setDigestHour(Number(e.target.value)); setStatus(null); }}
+                >
+                  {HOUR_OPTIONS.map(h => (
+                    <option key={h.value} value={h.value}>{h.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.digestRow}>
+                <label className={styles.digestLabel}>Timezone</label>
+                <select
+                  className={styles.select}
+                  value={timezone}
+                  onChange={(e) => { setTimezone(e.target.value); setStatus(null); }}
+                >
+                  {TIMEZONE_OPTIONS.map(tz => (
+                    <option key={tz.label} value={tz.label}>{tz.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </ModeOption>
         </div>
 
         <button
           className={styles.saveBtn}
-          disabled={saving || selectedMode === originalMode}
+          disabled={saving || !hasChanges}
           onClick={handleSave}
         >
           {saving ? 'Saving...' : 'Save preference'}

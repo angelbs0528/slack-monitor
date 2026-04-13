@@ -11,13 +11,16 @@ export async function GET(request) {
   }
 
   const prefs = await getUserPreference(teamId, userId);
-  const mode = prefs?.mode || process.env.DIGEST_MODE || 'daily';
-  return NextResponse.json({ mode });
+  return NextResponse.json({
+    mode: prefs?.mode || process.env.DIGEST_MODE || 'daily',
+    digestHour: prefs?.digestHour ?? 9,
+    timezone: prefs?.timezone ?? 'UTC',
+  });
 }
 
 export async function POST(request) {
   const body = await request.json();
-  const { team, user, mode } = body;
+  const { team, user, mode, digestHour, timezone } = body;
 
   if (!team || !user) {
     return NextResponse.json({ error: 'team and user are required' }, { status: 400 });
@@ -27,6 +30,11 @@ export async function POST(request) {
     return NextResponse.json({ error: 'mode must be "realtime" or "daily"' }, { status: 400 });
   }
 
-  await setUserPreference(team, user, { mode });
+  await setUserPreference(team, user, {
+    mode,
+    digestHour: digestHour ?? 9,
+    timezone: timezone ?? 'UTC',
+  });
+
   return NextResponse.json({ ok: true, mode });
 }
