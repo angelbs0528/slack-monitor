@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentions Bot for Slack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --slack-purple: #4A154B;
+      --slack-green: #2BAC76;
+      --text: #1d1c1d;
+      --muted: #616061;
+      --border: #e8e8e8;
+      --bg: #f8f8f8;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: var(--slack-purple);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo svg { width: 20px; height: 20px; fill: white; }
+
+    .logo-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .icon-wrap {
+      width: 72px;
+      height: 72px;
+      background: #f0e8f0;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .icon-wrap svg { width: 36px; height: 36px; }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    .feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: 10px;
+    }
+
+    .feature-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .feature-text { font-size: 14px; color: var(--muted); line-height: 1.5; }
+    .feature-text strong { color: var(--text); }
+
+    .add-to-slack {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--slack-purple);
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      padding: 14px 28px;
+      border-radius: 10px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .add-to-slack:hover { background: #611f64; }
+    .add-to-slack:active { transform: scale(0.98); }
+
+    .add-to-slack svg { width: 20px; height: 20px; fill: white; flex-shrink: 0; }
+
+    .notice {
+      margin-top: 1rem;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    /* Success / error banners */
+    .banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .banner.success { background: #e6f7ef; color: #1a7f4b; display: flex; }
+    .banner.error   { background: #fde8e8; color: #b91c1c; display: flex; }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 13px;
+      color: #bbb;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 15a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2h2v2zm1 0a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-5zm2-8a2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 2v2H9zm0 1a2 2 0 0 1 2 2 2 2 0 0 1-2 2H4a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5zm8 2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2v-2zm-1 0a2 2 0 0 1-2 2 2 2 0 0 1-2-2V5a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5zm-2 8a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2v-2h2zm0-1a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-5z"/>
+    </svg>
+  </div>
+  <span class="logo-name">Mentions Bot</span>
+</header>
+
+<main>
+  <div class="card">
+
+    <div id="banner-success" class="banner success">
+      ✅ <span id="success-text">Mentions Bot was successfully added to your workspace!</span>
+    </div>
+    <div id="banner-error" class="banner error">
+      ⚠️ <span id="error-text">Something went wrong. Please try again.</span>
+    </div>
+
+    <div class="icon-wrap">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 3C9.716 3 3 9.716 3 18c0 2.628.672 5.1 1.848 7.26L3 33l7.98-1.824A14.916 14.916 0 0 0 18 33c8.284 0 15-6.716 15-15S26.284 3 18 3z" fill="#4A154B" opacity=".15"/>
+        <path d="M13 17h10M13 21h6" stroke="#4A154B" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="24" cy="12" r="4" fill="#e63946"/>
+        <text x="24" y="16" font-size="5.5" font-weight="700" fill="white" text-anchor="middle">@</text>
+      </svg>
+    </div>
+
+    <h1>Never miss a mention</h1>
+    <p class="subtitle">
+      Mentions Bot watches every channel you're in and sends you a direct message whenever someone <strong>@mentions</strong> you — instantly or as a daily digest.
+    </p>
+
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-text"><strong>Real-time or daily digest</strong> — get notified the moment you're mentioned, or receive a tidy morning summary.</div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🔒</span>
+        <div class="feature-text"><strong>Public & private channels</strong> — monitors all channels the bot is invited to, including private ones.</div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">👥</span>
+        <div class="feature-text"><strong>Works for everyone</strong> — automatically notifies any workspace member when they're mentioned, no setup required per person.</div>
+      </div>
+    </div>
+
+    <a href="/api/install" class="add-to-slack">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 15a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2h2v2zm1 0a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-5zm2-8a2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 2v2H9zm0 1a2 2 0 0 1 2 2 2 2 0 0 1-2 2H4a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5zm8 2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2v-2zm-1 0a2 2 0 0 1-2 2 2 2 0 0 1-2-2V5a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5zm-2 8a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2v-2h2zm0-1a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-5z"/>
+      </svg>
+      Add to Slack
+    </a>
+
+    <p class="notice">Free to use · No data sold · Bot only reads messages to detect mentions</p>
+  </div>
+</main>
+
+<footer>Mentions Bot · Built with the Slack Events API</footer>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('success') === 'true') {
+    const team = params.get('team') || 'Your workspace';
+    document.getElementById('success-text').textContent =
+      `${decodeURIComponent(team)} is all set! Invite @MentionsBot to any channel to start monitoring.`;
+    document.getElementById('banner-success').style.display = 'flex';
+  }
+  if (params.get('error')) {
+    const msg = params.get('error') === 'access_denied'
+      ? 'Installation was cancelled.'
+      : 'Installation failed. Please try again.';
+    document.getElementById('error-text').textContent = msg;
+    document.getElementById('banner-error').style.display = 'flex';
+  }
+</script>
+
+</body>
+</html>
