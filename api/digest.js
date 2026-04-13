@@ -1,4 +1,4 @@
-import { getAllWorkspaces, getUsersWithPendingMentions, getAndClearMentions } from '../lib/store.js';
+import { getAllWorkspaces, getUsersWithPendingMentions, getAndClearMentions, getUserPreference } from '../lib/store.js';
 import { slackClient, sendDigestDM } from '../lib/slack.js';
 
 export default async function handler(req, res) {
@@ -24,6 +24,10 @@ export default async function handler(req, res) {
 
     await Promise.all(userIds.map(async (userId) => {
       try {
+        // Skip users who chose realtime — they already got instant DMs
+        const prefs = await getUserPreference(teamId, userId);
+        if (prefs?.mode === 'realtime') return;
+
         const mentions = await getAndClearMentions(teamId, userId);
         if (!mentions.length) return;
         mentions.sort((a, b) => parseFloat(b.ts) - parseFloat(a.ts));

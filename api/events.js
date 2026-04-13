@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { slackClient, getUserName, getChannelInfo, sendRealtimeDM } from '../lib/slack.js';
-import { storeMention, getWorkspace } from '../lib/store.js';
+import { storeMention, getWorkspace, getUserPreference } from '../lib/store.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       getChannelInfo(client, event.channel),
     ]);
 
-    const isRealtime = process.env.DIGEST_MODE === 'realtime';
+    const defaultMode = process.env.DIGEST_MODE || 'daily';
 
     await Promise.all(mentionedUserIds.map(async (userId) => {
       if (userId === event.user) return; // don't notify self-mentions
@@ -85,7 +85,9 @@ export default async function handler(req, res) {
         isPrivate: channelInfo.isPrivate, text: event.text,
         ts: event.ts, timestamp: Date.now(),
       };
-      if (isRealtime) {
+      const prefs = await getUserPreference(teamId, userId);
+      const mode = prefs?.mode || defaultMode;
+      if (mode === 'realtime') {
         await sendRealtimeDM(client, userId, mention);
       } else {
         await storeMention(teamId, userId, mention);
