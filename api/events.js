@@ -38,14 +38,15 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const rawBody = await readRawBody(req);
-  if (!verifySlackSignature(rawBody, req.headers)) {
-    return res.status(401).json({ error: 'Invalid Slack signature' });
-  }
-
   const payload = JSON.parse(rawBody.toString());
 
+  // Handle Slack URL verification challenge first (before signature check)
   if (payload.type === 'url_verification') {
     return res.status(200).json({ challenge: payload.challenge });
+  }
+
+  if (!verifySlackSignature(rawBody, req.headers)) {
+    return res.status(401).json({ error: 'Invalid Slack signature' });
   }
 
   if (payload.type === 'event_callback') {
