@@ -17,6 +17,7 @@ export async function GET() {
     'channels:join',
     'groups:read',
     'users:read',
+    'usergroups:read',
     'chat:write',
     'im:write',
   ].join(',');

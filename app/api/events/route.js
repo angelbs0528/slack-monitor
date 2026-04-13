@@ -17,12 +17,35 @@ function verifySlackSignature(rawBody, headers) {
   } catch { return false; }
 }
 
-function extractMentions(text = '') {
+function extractUserMentions(text = '') {
   const pattern = /<@([A-Z0-9]+)>/g;
   const ids = new Set();
   let match;
   while ((match = pattern.exec(text)) !== null) ids.add(match[1]);
   return [...ids];
+}
+
+function extractGroupMentions(text = '') {
+  const pattern = /<!subteam\^([A-Z0-9]+)(?:\|[^>]*)?>/g;
+  const ids = new Set();
+  let match;
+  while ((match = pattern.exec(text)) !== null) ids.add(match[1]);
+  return [...ids];
+}
+
+async function resolveGroupMembers(client, groupIds) {
+  const userIds = new Set();
+  await Promise.all(groupIds.map(async (groupId) => {
+    try {
+      const result = await client.usergroups.users.list({ usergroup: groupId });
+      if (result.users) {
+        result.users.forEach(id => userIds.add(id));
+      }
+    } catch (err) {
+      console.error(`[events] Failed to resolve group ${groupId}: ${err.message}`);
+    }
+  }));
+  return [...userIds];
 }
 
 export async function POST(request) {
@@ -49,9 +72,10 @@ export async function POST(request) {
       return NextResponse.json({ ok: true });
     }
 
-    const mentionedUserIds = extractMentions(event.text);
-    console.log(`[events] Mentions found: ${mentionedUserIds.length} in text: ${event.text?.substring(0, 100)}`);
-    if (!mentionedUserIds.length) {
+    const directMentions = extractUserMentions(event.text);
+    const groupMentionIds = extractGroupMentions(event.text);
+
+    if (!directMentions.length && !groupMentionIds.length) {
       return NextResponse.json({ ok: true });
     }
 
@@ -62,6 +86,11 @@ export async function POST(request) {
     }
 
     const client = slackClient(workspace.botToken);
+
+    // Resolve user group members and merge with direct mentions
+    const groupMembers = groupMentionIds.length ? await resolveGroupMembers(client, groupMentionIds) : [];
+    const mentionedUserIds = [...new Set([...directMentions, ...groupMembers])];
+    console.log(`[events] Mentions: ${directMentions.length} direct, ${groupMembers.length} from ${groupMentionIds.length} group(s)`);
     const [senderName, channelInfo] = await Promise.all([
       getUserName(client, event.user),
       getChannelInfo(client, event.channel),
