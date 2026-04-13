@@ -1,0 +1,17 @@
+{
+  "name": "slack-mentions-bot",
+  "version": "1.0.0",
+  "description": "Slack bot that DMs users when they are mentioned in any channel",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@slack/web-api": "^7.3.4",
+    "@upstash/redis": "^1.34.0"
+  },
+  "devDependencies": {
+    "vercel": "^37.6.0"
+  }
+}
