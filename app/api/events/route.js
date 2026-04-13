@@ -1,24 +1,15 @@
 import crypto from 'crypto';
-import { slackClient, getUserName, getChannelInfo, sendRealtimeDM } from '../lib/slack.js';
-import { storeMention, getWorkspace, getUserPreference } from '../lib/store.js';
-
-export const config = { api: { bodyParser: false } };
-
-async function readRawBody(req) {
-  const chunks = [];
-  for await (const chunk of req) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-  }
-  return Buffer.concat(chunks);
-}
+import { NextResponse } from 'next/server';
+import { slackClient, getUserName, getChannelInfo, sendRealtimeDM } from '@/lib/slack';
+import { storeMention, getWorkspace, getUserPreference } from '@/lib/store';
 
 function verifySlackSignature(rawBody, headers) {
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
-  const timestamp = headers['x-slack-request-timestamp'];
-  const slackSig = headers['x-slack-signature'];
+  const timestamp = headers.get('x-slack-request-timestamp');
+  const slackSig = headers.get('x-slack-signature');
   if (!timestamp || !slackSig) return false;
   if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
-  const sigBase = `v0:${timestamp}:${rawBody.toString()}`;
+  const sigBase = `v0:${timestamp}:${rawBody}`;
   const hmac = crypto.createHmac('sha256', signingSecret).update(sigBase).digest('hex');
   const computed = `v0=${hmac}`;
   try {
@@ -34,42 +25,39 @@ function extractMentions(text = '') {
   return [...ids];
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+export async function POST(request) {
+  const rawBody = await request.text();
+  const payload = JSON.parse(rawBody);
 
-  const rawBody = await readRawBody(req);
-  const payload = JSON.parse(rawBody.toString());
-
-  // Handle Slack URL verification challenge first (before signature check)
+  // Handle Slack URL verification challenge first
   if (payload.type === 'url_verification') {
-    return res.status(200).json({ challenge: payload.challenge });
+    return NextResponse.json({ challenge: payload.challenge });
   }
 
-  if (!verifySlackSignature(rawBody, req.headers)) {
-    return res.status(401).json({ error: 'Invalid Slack signature' });
+  if (!verifySlackSignature(rawBody, request.headers)) {
+    return NextResponse.json({ error: 'Invalid Slack signature' }, { status: 401 });
   }
 
   if (payload.type === 'event_callback') {
-    // Respond immediately — Slack requires a reply within 3 seconds
-    res.status(200).json({ ok: true });
-
     const event = payload.event;
     const teamId = payload.team_id;
 
-    if (event.bot_id || event.subtype === 'bot_message' || event.subtype || event.type !== 'message') return;
+    if (event.bot_id || event.subtype === 'bot_message' || event.subtype || event.type !== 'message') {
+      return NextResponse.json({ ok: true });
+    }
 
     const mentionedUserIds = extractMentions(event.text);
-    if (!mentionedUserIds.length) return;
+    if (!mentionedUserIds.length) {
+      return NextResponse.json({ ok: true });
+    }
 
-    // Look up this workspace's bot token
     const workspace = await getWorkspace(teamId);
     if (!workspace) {
       console.error(`[events] No workspace token found for team ${teamId}`);
-      return;
+      return NextResponse.json({ ok: true });
     }
 
     const client = slackClient(workspace.botToken);
-
     const [senderName, channelInfo] = await Promise.all([
       getUserName(client, event.user),
       getChannelInfo(client, event.channel),
@@ -78,7 +66,7 @@ export default async function handler(req, res) {
     const defaultMode = process.env.DIGEST_MODE || 'daily';
 
     await Promise.all(mentionedUserIds.map(async (userId) => {
-      if (userId === event.user) return; // don't notify self-mentions
+      if (userId === event.user) return;
       const mention = {
         userId, senderName, senderId: event.user,
         channel: channelInfo.name, channelId: event.channel,
@@ -93,8 +81,7 @@ export default async function handler(req, res) {
         await storeMention(teamId, userId, mention);
       }
     }));
-    return;
   }
 
-  res.status(200).json({ ok: true });
+  return NextResponse.json({ ok: true });
 }

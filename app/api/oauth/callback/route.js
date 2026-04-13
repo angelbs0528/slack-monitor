@@ -1,24 +1,20 @@
 import { WebClient } from '@slack/web-api';
-import { storeWorkspace } from '../../lib/store.js';
+import { redirect } from 'next/navigation';
+import { storeWorkspace } from '@/lib/store';
 
-/**
- * GET /api/oauth/callback
- * Slack redirects here after the user approves the app.
- * Exchanges the temporary code for a bot token and stores it.
- */
-export default async function handler(req, res) {
-  const { code, error } = req.query;
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
+  const error = searchParams.get('error');
   const appUrl = process.env.APP_URL;
 
   if (error || !code) {
     console.error('[oauth] Denied or missing code:', error);
-    return res.redirect(`${appUrl}?error=access_denied`);
+    redirect(`${appUrl}?error=access_denied`);
   }
 
   try {
-    // Use a token-less client just for the OAuth exchange
     const client = new WebClient();
-
     const result = await client.oauth.v2.access({
       client_id: process.env.SLACK_CLIENT_ID,
       client_secret: process.env.SLACK_CLIENT_SECRET,
@@ -35,11 +31,10 @@ export default async function handler(req, res) {
     });
 
     console.log(`[oauth] Installed to workspace: ${result.team.name} (${result.team.id})`);
-
     const teamName = encodeURIComponent(result.team.name);
-    return res.redirect(`${appUrl}?success=true&team=${teamName}`);
+    redirect(`${appUrl}?success=true&team=${teamName}`);
   } catch (err) {
     console.error('[oauth] Token exchange failed:', err.message);
-    return res.redirect(`${appUrl}?error=install_failed`);
+    redirect(`${appUrl}?error=install_failed`);
   }
 }

@@ -1,17 +1,18 @@
-import { getAllWorkspaces, getUsersWithPendingMentions, getAndClearMentions, getUserPreference } from '../lib/store.js';
-import { slackClient, sendDigestDM } from '../lib/slack.js';
+import { NextResponse } from 'next/server';
+import { getAllWorkspaces, getUsersWithPendingMentions, getAndClearMentions, getUserPreference } from '@/lib/store';
+import { slackClient, sendDigestDM } from '@/lib/slack';
 
-export default async function handler(req, res) {
-  const authHeader = req.headers.authorization;
+export async function POST(request) {
+  const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const workspaces = await getAllWorkspaces();
   if (!workspaces.length) {
     console.log('[digest] No installed workspaces.');
-    return res.status(200).json({ ok: true, sent: 0 });
+    return NextResponse.json({ ok: true, sent: 0 });
   }
 
   let sent = 0;
@@ -24,7 +25,6 @@ export default async function handler(req, res) {
 
     await Promise.all(userIds.map(async (userId) => {
       try {
-        // Skip users who chose realtime — they already got instant DMs
         const prefs = await getUserPreference(teamId, userId);
         if (prefs?.mode === 'realtime') return;
 
@@ -41,5 +41,5 @@ export default async function handler(req, res) {
     }));
   }));
 
-  return res.status(200).json({ ok: true, sent, errors });
+  return NextResponse.json({ ok: true, sent, errors });
 }

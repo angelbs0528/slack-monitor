@@ -1,14 +1,13 @@
-import { slackClient } from '../lib/slack.js';
-import { getAllWorkspaces } from '../lib/store.js';
+import { NextResponse } from 'next/server';
+import { slackClient } from '@/lib/slack';
+import { getAllWorkspaces } from '@/lib/store';
 
-export const config = { maxDuration: 60 };
+export const maxDuration = 60;
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
-
-  const auth = req.headers.authorization;
+export async function POST(request) {
+  const auth = request.headers.get('authorization');
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const workspaces = await getAllWorkspaces();
@@ -31,7 +30,6 @@ export default async function handler(req, res) {
       const toJoin = list.channels.filter(c => !c.is_member);
       already += list.channels.length - toJoin.length;
 
-      // Join in parallel batches of 10
       for (let i = 0; i < toJoin.length; i += 10) {
         const batch = toJoin.slice(i, i + 10);
         const settled = await Promise.allSettled(
@@ -46,5 +44,5 @@ export default async function handler(req, res) {
     results.push({ team: ws.teamName, joined, alreadyIn: already });
   }
 
-  res.status(200).json({ results });
+  return NextResponse.json({ results });
 }

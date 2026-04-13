@@ -1,0 +1,97 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.success { background: #e6f7ef; color: #1a7f4b; }
+.error { background: #fde8e8; color: #b91c1c; }
+
+.iconWrap {
+  width: 72px;
+  height: 72px;
+  background: #f0e8f0;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.iconWrap svg { width: 36px; height: 36px; }
+
+.title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-radius: 10px;
+}
+
+.featureIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.featureText {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.featureText strong { color: var(--text); }
+
+.addToSlack {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--slack-purple);
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 14px 28px;
+  border-radius: 10px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.addToSlack:hover { background: #611f64; }
+.addToSlack:active { transform: scale(0.98); }
+.addToSlack svg { width: 20px; height: 20px; fill: white; flex-shrink: 0; }
+
+.notice {
+  margin-top: 1rem;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.settingsLink { color: var(--slack-purple); }

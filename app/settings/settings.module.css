@@ -1,0 +1,111 @@
+.heading {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.greeting {
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+/* Sign in */
+.signinPrompt { text-align: center; }
+.signinText { font-size: 15px; color: var(--muted); margin-bottom: 1.5rem; }
+
+.signinBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--slack-purple);
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.signinBtn:hover { background: #611f64; }
+.signinBtn svg { width: 20px; height: 20px; fill: white; }
+
+/* Mode options */
+.modeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.modeOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.modeOption:hover { border-color: #ccc; }
+
+.modeOption.active {
+  border-color: var(--slack-purple);
+  background: #faf5fa;
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.active .radio { border-color: var(--slack-purple); }
+
+.radioDot {
+  width: 10px;
+  height: 10px;
+  background: var(--slack-purple);
+  border-radius: 50%;
+}
+
+.modeLabel { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.modeDesc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* Save button */
+.saveBtn {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  background: var(--slack-purple);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.saveBtn:hover { background: #611f64; }
+.saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Status */
+.status {
+  margin-top: 1rem;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.success { background: #e6f7ef; color: #1a7f4b; }
+.error { background: #fde8e8; color: #b91c1c; }
