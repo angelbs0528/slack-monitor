@@ -13,6 +13,7 @@ export async function GET(request) {
     redirect(`${appUrl}?error=access_denied`);
   }
 
+  let redirectUrl;
   try {
     const client = new WebClient();
     const result = await client.oauth.v2.access({
@@ -32,9 +33,11 @@ export async function GET(request) {
 
     console.log(`[oauth] Installed to workspace: ${result.team.name} (${result.team.id})`);
     const teamName = encodeURIComponent(result.team.name);
-    redirect(`${appUrl}?success=true&team=${teamName}`);
+    redirectUrl = `${appUrl}?success=true&team=${teamName}`;
   } catch (err) {
     console.error('[oauth] Token exchange failed:', err.message);
-    redirect(`${appUrl}?error=install_failed`);
+    redirectUrl = `${appUrl}?error=install_failed`;
   }
+
+  redirect(redirectUrl);
 }

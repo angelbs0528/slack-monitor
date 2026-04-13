@@ -11,6 +11,7 @@ export async function GET(request) {
     redirect(`${appUrl}/settings?error=signin_failed`);
   }
 
+  let redirectUrl;
   try {
     const client = new WebClient();
     const result = await client.openid.connect.token({
@@ -27,9 +28,11 @@ export async function GET(request) {
     const userId = userInfo['https://slack.com/user_id'];
     const name = userInfo.name || 'User';
 
-    redirect(`${appUrl}/settings?team=${teamId}&user=${userId}&name=${encodeURIComponent(name)}`);
+    redirectUrl = `${appUrl}/settings?team=${teamId}&user=${userId}&name=${encodeURIComponent(name)}`;
   } catch (err) {
     console.error('[auth/callback]', err.message);
-    redirect(`${appUrl}/settings?error=signin_failed`);
+    redirectUrl = `${appUrl}/settings?error=signin_failed`;
   }
+
+  redirect(redirectUrl);
 }
