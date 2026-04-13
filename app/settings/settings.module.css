@@ -81,42 +81,6 @@
 .modeLabel { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .modeDesc { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
-/* Digest config */
-.digestConfig {
-  padding: 12px 16px 4px 48px;
-}
-
-.digestRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.digestLabel {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-  min-width: 100px;
-}
-
-.select {
-  flex: 1;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: 'Inter', sans-serif;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: white;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.select:focus {
-  outline: none;
-  border-color: var(--slack-purple);
-}
-
 /* Save button */
 .saveBtn {
   width: 100%;
