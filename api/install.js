@@ -17,6 +17,7 @@ export default function handler(req, res) {
     'im:history',
     'mpim:history',
     'channels:read',
+    'channels:join',
     'groups:read',
     'users:read',
     'chat:write',
