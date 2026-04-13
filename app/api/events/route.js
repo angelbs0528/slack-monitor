@@ -42,11 +42,15 @@ export async function POST(request) {
     const event = payload.event;
     const teamId = payload.team_id;
 
-    if (event.bot_id || event.subtype === 'bot_message' || event.subtype || event.type !== 'message') {
+    console.log(`[events] Received: type=${event.type} subtype=${event.subtype || 'none'} bot=${!!event.bot_id} team=${teamId}`);
+
+    // Skip bot messages and non-standard message subtypes (edits, joins, etc.)
+    if (event.bot_id || event.subtype) {
       return NextResponse.json({ ok: true });
     }
 
     const mentionedUserIds = extractMentions(event.text);
+    console.log(`[events] Mentions found: ${mentionedUserIds.length} in text: ${event.text?.substring(0, 100)}`);
     if (!mentionedUserIds.length) {
       return NextResponse.json({ ok: true });
     }
