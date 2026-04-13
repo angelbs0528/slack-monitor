@@ -245,8 +245,7 @@
     document.getElementById('success-text').textContent =
       `${decodeURIComponent(team)} is all set! Invite @MentionsBot to any channel to start monitoring.`;
     document.getElementById('banner-success').style.display = 'flex';
-  }
-  if (params.get('error')) {
+  } else if (params.get('error')) {
     const msg = params.get('error') === 'access_denied'
       ? 'Installation was cancelled.'
       : 'Installation failed. Please try again.';
