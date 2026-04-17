@@ -28,6 +28,7 @@ export async function GET(request) {
       teamName: result.team.name,
       botToken: result.access_token,
       botUserId: result.bot_user_id,
+      installerUserId: result.authed_user?.id,
       installedAt: Date.now(),
     });
 

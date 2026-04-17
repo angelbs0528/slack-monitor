@@ -89,8 +89,13 @@ export async function POST(request) {
 
     // Resolve user group members and merge with direct mentions
     const groupMembers = groupMentionIds.length ? await resolveGroupMembers(client, groupMentionIds) : [];
-    const mentionedUserIds = [...new Set([...directMentions, ...groupMembers])];
-    console.log(`[events] Mentions: ${directMentions.length} direct, ${groupMembers.length} from ${groupMentionIds.length} group(s)`);
+    let mentionedUserIds = [...new Set([...directMentions, ...groupMembers])];
+
+    // Only notify the user who installed the bot
+    if (workspace.installerUserId) {
+      mentionedUserIds = mentionedUserIds.filter(id => id === workspace.installerUserId);
+    }
+    console.log(`[events] Mentions: ${directMentions.length} direct, ${groupMembers.length} from ${groupMentionIds.length} group(s), ${mentionedUserIds.length} will be notified`);
     const [senderName, channelInfo] = await Promise.all([
       getUserName(client, event.user),
       getChannelInfo(client, event.channel),
